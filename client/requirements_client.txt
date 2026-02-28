@@ -1,0 +1,30 @@
+# Client-side requirements (Windows)
+# pip install -r requirements_client.txt
+
+# 키움 API
+pykiwoom==0.0.22
+
+# 데이터 처리
+pandas==2.2.2
+numpy==1.26.4
+
+# 기술적 지표 (옵션 - 설치 어려울 경우 strategy.py 내장 구현 사용)
+# TA-Lib  # conda install -c conda-forge ta-lib
+
+# HTTP 클라이언트
+requests==2.32.2
+
+# 스케줄러
+schedule==1.2.2
+
+# GUI (pykiwoom 의존)
+PyQt5==5.15.10
+
+# 텔레그램 알림 (선택)
+pytelegrambotapi==4.18.0
+
+# 환경변수
+python-dotenv==1.0.1
+
+# 로깅
+colorlog==6.8.2

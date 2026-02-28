@@ -1,0 +1,83 @@
+version: "3.9"
+
+services:
+  # ──────────────────────────────────────────────
+  # PostgreSQL 데이터베이스
+  # ──────────────────────────────────────────────
+  postgres:
+    image: postgres:15-alpine
+    container_name: trading_postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB:       trading_db
+      POSTGRES_USER:     trading_user
+      POSTGRES_PASSWORD: trading_pass
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U trading_user -d trading_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ──────────────────────────────────────────────
+  # FastAPI 백엔드 서버
+  # ──────────────────────────────────────────────
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile.api
+    container_name: trading_api
+    restart: unless-stopped
+    environment:
+      DB_HOST:        postgres
+      DB_PORT:        "5432"
+      DB_NAME:        trading_db
+      DB_USER:        trading_user
+      DB_PASSWORD:    trading_pass
+      SERVER_API_KEY: ${SERVER_API_KEY:-your-secret-api-key-here}
+    ports:
+      - "8000:8000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    volumes:
+      - ./logs:/app/logs
+
+  # ──────────────────────────────────────────────
+  # Streamlit 대시보드
+  # ──────────────────────────────────────────────
+  dashboard:
+    build:
+      context: .
+      dockerfile: Dockerfile.dashboard
+    container_name: trading_dashboard
+    restart: unless-stopped
+    environment:
+      API_URL: http://api:8000
+    ports:
+      - "8501:8501"
+    depends_on:
+      - api
+
+  # ──────────────────────────────────────────────
+  # Nginx 리버스 프록시
+  # ──────────────────────────────────────────────
+  nginx:
+    image: nginx:alpine
+    container_name: trading_nginx
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx.conf:/etc/nginx/conf.d/default.conf
+    depends_on:
+      - api
+      - dashboard
+
+volumes:
+  postgres_data:
