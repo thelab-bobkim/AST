@@ -3,6 +3,8 @@ version: "3.9"
 services:
   # ──────────────────────────────────────────────
   # PostgreSQL 데이터베이스
+  # 외부 포트 노출 없음 (Docker 내부 네트워크만 사용)
+  # 기존 5432 포트 충돌 방지
   # ──────────────────────────────────────────────
   postgres:
     image: postgres:15-alpine
@@ -15,8 +17,7 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
       - ./init.sql:/docker-entrypoint-initdb.d/init.sql
-    ports:
-      - "5432:5432"
+    # ports: 제거 → Docker 내부 통신만 (5432 충돌 방지)
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U trading_user -d trading_db"]
       interval: 10s
@@ -25,6 +26,7 @@ services:
 
   # ──────────────────────────────────────────────
   # FastAPI 백엔드 서버
+  # 포트: 9000 (기존 8000 → 충돌로 변경)
   # ──────────────────────────────────────────────
   api:
     build:
@@ -40,7 +42,7 @@ services:
       DB_PASSWORD:    trading_pass
       SERVER_API_KEY: ${SERVER_API_KEY:-your-secret-api-key-here}
     ports:
-      - "8000:8000"
+      - "9000:8000"
     depends_on:
       postgres:
         condition: service_healthy
@@ -49,6 +51,7 @@ services:
 
   # ──────────────────────────────────────────────
   # Streamlit 대시보드
+  # 포트: 9001 (기존 8501 → 충돌로 변경)
   # ──────────────────────────────────────────────
   dashboard:
     build:
@@ -59,20 +62,20 @@ services:
     environment:
       API_URL: http://api:8000
     ports:
-      - "8501:8501"
+      - "9001:8501"
     depends_on:
       - api
 
   # ──────────────────────────────────────────────
   # Nginx 리버스 프록시
+  # 포트: 9080 (기존 80 → 충돌로 변경)
   # ──────────────────────────────────────────────
   nginx:
     image: nginx:alpine
     container_name: trading_nginx
     restart: unless-stopped
     ports:
-      - "80:80"
-      - "443:443"
+      - "9080:80"
     volumes:
       - ./nginx.conf:/etc/nginx/conf.d/default.conf
     depends_on:
