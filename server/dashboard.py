@@ -14,7 +14,7 @@ import time
 # ──────────────────────────────────────────────
 # 설정
 # ──────────────────────────────────────────────
-API_URL = "http://localhost:8000"
+API_URL = "http://43.203.181.195:9000"
 INITIAL_CAPITAL = 1_000_000
 REFRESH_SEC = 30
 
@@ -49,26 +49,32 @@ st.markdown("""
 # ──────────────────────────────────────────────
 # 데이터 로드 함수
 # ──────────────────────────────────────────────
+def _get_api_url():
+    return st.session_state.get("api_url", API_URL)
+
 @st.cache_data(ttl=REFRESH_SEC)
-def load_latest():
+def load_latest(api_url=None):
+    url = api_url or API_URL
     try:
-        r = requests.get(f"{API_URL}/api/trading/latest", timeout=5)
+        r = requests.get(f"{url}/api/trading/latest", timeout=5)
         return r.json() if r.status_code == 200 else {}
     except:
         return {}
 
 @st.cache_data(ttl=REFRESH_SEC)
-def load_snapshots():
+def load_snapshots(api_url=None):
+    url = api_url or API_URL
     try:
-        r = requests.get(f"{API_URL}/api/trading/snapshots?limit=200", timeout=5)
+        r = requests.get(f"{url}/api/trading/snapshots?limit=200", timeout=5)
         return r.json() if r.status_code == 200 else []
     except:
         return []
 
 @st.cache_data(ttl=REFRESH_SEC)
-def load_trades():
+def load_trades(api_url=None):
+    url = api_url or API_URL
     try:
-        r = requests.get(f"{API_URL}/api/trading/trades?limit=100", timeout=5)
+        r = requests.get(f"{url}/api/trading/trades?limit=100", timeout=5)
         return r.json() if r.status_code == 200 else []
     except:
         return []
@@ -79,7 +85,7 @@ def load_trades():
 with st.sidebar:
     st.image("https://i.imgur.com/placeholder.png", width=80)  # 로고 자리
     st.title("⚙️ 시스템 설정")
-    API_URL = st.text_input("API 서버 주소", value=API_URL)
+    API_URL = st.text_input("API 서버 주소", value=st.session_state.get("api_url", API_URL), key="api_url")
     refresh = st.slider("자동 새로고침 (초)", 10, 300, REFRESH_SEC)
     st.markdown("---")
     st.markdown("### 📊 전략 정보")
@@ -100,9 +106,10 @@ with st.sidebar:
 st.title("📈 키움증권 자동매매 모니터링")
 st.markdown(f"*마지막 업데이트: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}*")
 
-latest = load_latest()
-snaps  = load_snapshots()
-trades = load_trades()
+_api = st.session_state.get("api_url", API_URL)
+latest = load_latest(_api)
+snaps  = load_snapshots(_api)
+trades = load_trades(_api)
 
 if not latest or "message" in latest:
     st.warning("⚠️ 클라이언트에서 데이터를 수신하지 못했습니다. 자동매매 클라이언트가 실행 중인지 확인하세요.")
