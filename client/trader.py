@@ -109,6 +109,8 @@ class AutoTrader:
         self.is_running = True
         self._schedule_jobs()
         self._send_status("STARTED")
+        self._sync_server(force=True)   # 시작 즉시 대시보드 데이터 전송
+        logger.info(f"📊 서버 동기화 완료 | URL: {config.SERVER_API_URL}")
 
         try:
             while self.is_running:
