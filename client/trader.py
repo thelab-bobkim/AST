@@ -41,8 +41,10 @@ def setup_logging():
     )
     fh.setFormatter(fmt)
 
-    # 콘솔 핸들러
-    ch = logging.StreamHandler()
+    # 콘솔 핸들러 (UTF-8 강제 설정)
+    import sys, io
+    utf8_stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8', errors='replace')
+    ch = logging.StreamHandler(utf8_stdout)
     ch.setFormatter(fmt)
 
     root_logger = logging.getLogger()
