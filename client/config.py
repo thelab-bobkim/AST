@@ -5,8 +5,12 @@
 # ============================================================
 
 import os
+from dotenv import load_dotenv
 from dataclasses import dataclass, field
 from typing import List
+
+# .env 파일 로드 (config.py와 같은 폴더)
+load_dotenv(dotenv_path=os.path.join(os.path.dirname(os.path.abspath(__file__)), ".env"))
 
 # ──────────────────────────────────────────────
 # 키움 API 설정
