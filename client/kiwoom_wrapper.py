@@ -64,6 +64,15 @@ class KiwoomWrapper:
                     self.account_number = accounts.split(';')[0]
                 logger.info(f"✅ 키움 로그인 성공 | 계좌: {self.account_number}")
 
+                # 계좌 주문 비밀번호 자동 설정 (실전투자 자동주문용)
+                try:
+                    import config as cfg
+                    acct_pw = getattr(cfg, 'ACCOUNT_PASSWORD', '0000')
+                    self.kiwoom.KOA_Functions("SetAccountPassword", acct_pw)
+                    logger.info("🔑 계좌 주문 비밀번호 설정 완료")
+                except Exception as pw_err:
+                    logger.warning(f"계좌 비밀번호 자동설정 실패 (무시 가능): {pw_err}")
+
                 # 모의투자 서버 확인
                 server = self.kiwoom.GetLoginInfo("GetServerGubun")
                 server_name = "모의투자" if server == "1" else "실전투자"
