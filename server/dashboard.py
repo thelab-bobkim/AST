@@ -3,6 +3,7 @@
 # 실시간 포트폴리오·거래 현황 시각화
 # ============================================================
 
+import os
 import streamlit as st
 import requests
 import pandas as pd
@@ -13,8 +14,10 @@ import time
 
 # ──────────────────────────────────────────────
 # 설정
+# docker-compose 환경변수 API_URL 우선 사용
+# (없으면 외부 IP 기본값)
 # ──────────────────────────────────────────────
-API_URL = "http://43.203.181.195:9000"
+API_URL = os.getenv("API_URL", "http://43.203.181.195:9000")
 INITIAL_CAPITAL = 1_000_000
 REFRESH_SEC = 30
 
