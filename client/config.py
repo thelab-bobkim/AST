@@ -15,7 +15,7 @@ KIWOOM_USER_ID       = os.getenv("KIWOOM_USER_ID", "YOUR_ID")
 KIWOOM_PASSWORD      = os.getenv("KIWOOM_PASSWORD", "YOUR_PW")
 KIWOOM_CERT_PASSWORD = os.getenv("KIWOOM_CERT_PW", "YOUR_CERT_PW")
 ACCOUNT_NUMBER       = os.getenv("KIWOOM_ACCOUNT", "YOUR_ACCOUNT_NO")  # ex) 1234567890
-ACCOUNT_PASSWORD     = os.getenv("KIWOOM_ACCOUNT_PASSWORD", "0000")  # 계좌 주문 비밀번호 (4자리)
+ACCOUNT_PASSWORD     = os.getenv("KIWOOM_ACCOUNT_PASSWORD", "0000")  # 계좌 주문 비밀번호 (4~6자리)
 
 # 모의투자 여부 (True=모의, False=실전)
 IS_MOCK_TRADING      = os.getenv("IS_MOCK_TRADING", "True").lower() != "false"
