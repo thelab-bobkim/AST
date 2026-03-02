@@ -1,7 +1,12 @@
+# -*- coding: utf-8 -*-
 # ============================================================
 # trader.py - 메인 트레이딩 엔진 (오케스트레이터)
 # 전략·리스크관리·API를 통합
 # ============================================================
+import sys
+import io
+sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8', errors='replace')
+sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding='utf-8', errors='replace')
 
 import time
 import logging

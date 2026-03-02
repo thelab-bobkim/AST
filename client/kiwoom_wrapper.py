@@ -56,7 +56,11 @@ class KiwoomWrapper:
             if login_state == 1:
                 self.is_connected = True
                 accounts = self.kiwoom.GetLoginInfo("ACCNO")
-                self.account_number = accounts.split(';')[0]
+                # pykiwoom 버전에 따라 list 또는 문자열 반환
+                if isinstance(accounts, list):
+                    self.account_number = accounts[0]
+                else:
+                    self.account_number = accounts.split(';')[0]
                 logger.info(f"✅ 키움 로그인 성공 | 계좌: {self.account_number}")
 
                 # 모의투자 서버 확인
