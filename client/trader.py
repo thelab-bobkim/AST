@@ -94,7 +94,7 @@ class AutoTrader:
         """자동매매 시작"""
         logger.info("=" * 60)
         logger.info("🚀 키움 자동매매 시스템 시작")
-        logger.info(f"   모드: {'모의투자' if config.IS_MOCK_TRADING else '실전투자'}")
+        logger.info(f"   모드: {'모의투자' if config.IS_MOCK_TRADING else '실전투자'} (설정값)")
         logger.info(f"   자본: {config.INITIAL_CAPITAL:,}원")
         logger.info(f"   전략: {config.STRATEGY_NAME}")
         logger.info("=" * 60)
@@ -103,6 +103,9 @@ class AutoTrader:
             logger.error("키움 API 연결 실패 - 종료")
             return
 
+        # 실제 연결된 서버 기준으로 모드 재확인
+        actual_mode = "모의투자" if self.kiwoom.is_mock else "실전투자"
+        logger.info(f"   ✅ 실제 접속 모드: {actual_mode}")
         self.is_running = True
         self._schedule_jobs()
         self._send_status("STARTED")
