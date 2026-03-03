@@ -132,6 +132,14 @@ class AutoTrader:
         self._sync_server(force=True)   # 시작 즉시 대시보드 데이터 전송
         logger.info(f"📊 서버 동기화 완료 | URL: {config.SERVER_API_URL}")
 
+        # 장중에 시작된 경우 즉시 데이터 로드 (08:50 이후 시작 시 stock_data 없음 방지)
+        if self._is_market_hours():
+            logger.info("⏰ 장중 시작 감지 → 즉시 데이터 로드")
+            self._load_ohlcv_data()
+            logger.info(f"   종목 데이터 로드 완료: {len(self.stock_data)}개")
+            logger.info("🔍 즉시 매매 신호 스캔 시작")
+            self._scan_signals()
+
         try:
             while self.is_running:
                 try:
