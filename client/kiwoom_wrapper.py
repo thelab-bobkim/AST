@@ -153,53 +153,67 @@ class KiwoomWrapper:
     # ──────────────────────────────────────────────
     def get_daily_ohlcv(self, code: str, start_date: str, count: int = 60) -> List[Dict]:
         """
-        일봉 OHLCV 데이터 조회
-        code: 종목코드 (ex. "005930")
-        start_date: 조회 시작일 (YYYYMMDD)
-        count: 조회 봉 수
+        일봉 OHLCV 데이터 조회 (pykiwoom block_request 방식)
         """
         if not self.is_connected:
             return []
 
         try:
-            self.kiwoom.SetInputValue("종목코드", code)
-            self.kiwoom.SetInputValue("기준일자", start_date)
-            self.kiwoom.SetInputValue("수정주가구분", "1")
-            self.kiwoom.CommRqData("주식일봉차트조회", "opt10081", 0, "0101", block=True)
+            df = self.kiwoom.block_request(
+                "opt10081",
+                종목코드=code,
+                기준일자=start_date,
+                수정주가구분=1,
+                output="주식일봉차트조회",
+                next=0
+            )
+
+            if df is None or len(df) == 0:
+                logger.warning(f"OHLCV 데이터 없음 ({code})")
+                return []
 
             ohlcv_list = []
-            rows = min(self.kiwoom.GetRepeatCnt("opt10081", "주식일봉차트조회"), count)
-            for i in range(rows):
-                date  = self.kiwoom.GetCommData("opt10081", "주식일봉차트조회", i, "일자").strip()
-                open_ = abs(int(self.kiwoom.GetCommData("opt10081", "주식일봉차트조회", i, "시가").strip() or 0))
-                high  = abs(int(self.kiwoom.GetCommData("opt10081", "주식일봉차트조회", i, "고가").strip() or 0))
-                low   = abs(int(self.kiwoom.GetCommData("opt10081", "주식일봉차트조회", i, "저가").strip() or 0))
-                close = abs(int(self.kiwoom.GetCommData("opt10081", "주식일봉차트조회", i, "현재가").strip() or 0))
-                vol   = abs(int(self.kiwoom.GetCommData("opt10081", "주식일봉차트조회", i, "거래량").strip() or 0))
+            for _, row in df.iterrows():
+                try:
+                    ohlcv_list.append({
+                        "date":   str(row.get("일자", "")).strip(),
+                        "open":   abs(int(str(row.get("시가",   0)).strip() or 0)),
+                        "high":   abs(int(str(row.get("고가",   0)).strip() or 0)),
+                        "low":    abs(int(str(row.get("저가",   0)).strip() or 0)),
+                        "close":  abs(int(str(row.get("현재가", 0)).strip() or 0)),
+                        "volume": abs(int(str(row.get("거래량", 0)).strip() or 0)),
+                    })
+                except (ValueError, TypeError):
+                    continue
 
-                ohlcv_list.append({
-                    "date": date, "open": open_, "high": high,
-                    "low": low, "close": close, "volume": vol
-                })
-
-            return sorted(ohlcv_list, key=lambda x: x["date"])
+            ohlcv_list = [x for x in ohlcv_list if x["close"] > 0]
+            ohlcv_list = sorted(ohlcv_list, key=lambda x: x["date"])
+            return ohlcv_list[-count:]
 
         except Exception as e:
             logger.error(f"일봉 조회 오류 ({code}): {e}")
             return []
 
     def get_current_price(self, code: str) -> Dict:
-        """현재가 조회 (opt10001)"""
+        """현재가 조회 (pykiwoom block_request 방식)"""
         if not self.is_connected:
             return {}
 
         try:
-            self.kiwoom.SetInputValue("종목코드", code)
-            self.kiwoom.CommRqData("주식기본정보", "opt10001", 0, "0101", block=True)
+            df = self.kiwoom.block_request(
+                "opt10001",
+                종목코드=code,
+                output="주식기본정보",
+                next=0
+            )
 
-            price = abs(int(self.kiwoom.GetCommData("opt10001", "주식기본정보", 0, "현재가").strip() or 0))
-            name  = self.kiwoom.GetCommData("opt10001", "주식기본정보", 0, "종목명").strip()
-            chg   = float(self.kiwoom.GetCommData("opt10001", "주식기본정보", 0, "등락률").strip() or 0)
+            if df is None or len(df) == 0:
+                return {}
+
+            row   = df.iloc[0]
+            price = abs(int(str(row.get("현재가", 0)).strip() or 0))
+            name  = str(row.get("종목명", code)).strip()
+            chg   = float(str(row.get("등락률", 0)).strip() or 0)
 
             return {"code": code, "name": name, "price": price, "change_pct": chg}
 
