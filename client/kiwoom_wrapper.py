@@ -12,6 +12,33 @@ from typing import Dict, List, Optional, Tuple
 
 logger = logging.getLogger(__name__)
 
+from contextlib import contextmanager
+import os
+
+@contextmanager
+def _suppress_print():
+    """pykiwoom block_request가 TR 정의 dict를 print하는 것을 억제"""
+    with open(os.devnull, 'w') as devnull:
+        old = sys.stdout
+        sys.stdout = devnull
+        try:
+            yield
+        finally:
+            sys.stdout = old
+
+def _safe_str(val) -> str:
+    """CP949 인코딩 문자열을 안전하게 UTF-8로 변환"""
+    if isinstance(val, bytes):
+        try:
+            return val.decode('cp949')
+        except Exception:
+            return val.decode('utf-8', errors='replace')
+    s = str(val).strip()
+    try:
+        return s.encode('cp949').decode('cp949')
+    except Exception:
+        return s
+
 # Windows 환경에서만 pykiwoom 임포트
 try:
     from pykiwoom.kiwoom import Kiwoom
@@ -159,14 +186,15 @@ class KiwoomWrapper:
             return []
 
         try:
-            df = self.kiwoom.block_request(
-                "opt10081",
-                종목코드=code,
-                기준일자=start_date,
-                수정주가구분=1,
-                output="주식일봉차트조회",
-                next=0
-            )
+            with _suppress_print():
+                df = self.kiwoom.block_request(
+                    "opt10081",
+                    종목코드=code,
+                    기준일자=start_date,
+                    수정주가구분=1,
+                    output="주식일봉차트조회",
+                    next=0
+                )
 
             if df is None or len(df) == 0:
                 logger.warning(f"OHLCV 데이터 없음 ({code})")
@@ -200,19 +228,20 @@ class KiwoomWrapper:
             return {}
 
         try:
-            df = self.kiwoom.block_request(
-                "opt10001",
-                종목코드=code,
-                output="주식기본정보",
-                next=0
-            )
+            with _suppress_print():
+                df = self.kiwoom.block_request(
+                    "opt10001",
+                    종목코드=code,
+                    output="주식기본정보",
+                    next=0
+                )
 
             if df is None or len(df) == 0:
                 return {}
 
             row   = df.iloc[0]
             price = abs(int(str(row.get("현재가", 0)).strip() or 0))
-            name  = str(row.get("종목명", code)).strip()
+            name  = _safe_str(row.get("종목명", code))
             chg   = float(str(row.get("등락률", 0)).strip() or 0)
 
             return {"code": code, "name": name, "price": price, "change_pct": chg}
