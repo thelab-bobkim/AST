@@ -12,7 +12,13 @@ import time
 import logging
 import schedule
 import requests
-from datetime import datetime, time as dtime
+from datetime import datetime, time as dtime, timezone, timedelta
+
+# ── KST 타임존 헬퍼 (AWS는 UTC이므로 +9 적용) ──
+KST = timezone(timedelta(hours=9))
+def now_kst() -> datetime:
+    """항상 KST(UTC+9) 기준 현재 시각 반환"""
+    return datetime.now(timezone.utc).astimezone(KST)
 from typing import Dict, List, Optional
 
 import config
@@ -262,7 +268,7 @@ class AutoTrader:
     # ──────────────────────────────────────────────
     def _load_ohlcv_data(self):
         """감시 종목 OHLCV 데이터 로드"""
-        today_str = datetime.now().strftime("%Y%m%d")
+        today_str = now_kst().strftime("%Y%m%d")
         self.stock_data = {}
 
         for code in config.WATCHLIST:
@@ -285,7 +291,7 @@ class AutoTrader:
         """Lightsail 서버로 데이터 전송"""
         try:
             payload = {
-                "timestamp":  datetime.now().isoformat(),
+                "timestamp":  now_kst().isoformat(),
                 "summary":    self.risk_manager.get_summary(),
                 "stats":      self.risk_manager.get_performance_stats(),
                 "trade_log":  self.risk_manager.get_trade_log(20),
@@ -311,7 +317,7 @@ class AutoTrader:
         try:
             requests.post(
                 f"{config.SERVER_API_URL}/api/trading/status",
-                json={"status": status, "timestamp": datetime.now().isoformat()},
+                json={"status": status, "timestamp": now_kst().isoformat()},
                 headers={"X-API-Key": config.SERVER_API_KEY},
                 timeout=3
             )
@@ -323,10 +329,10 @@ class AutoTrader:
     # ──────────────────────────────────────────────
     def _is_market_hours(self) -> bool:
         """현재 장 시간 여부"""
-        now = datetime.now().time()
+        now = now_kst().time()
         open_t  = dtime(9, 0)
         close_t = dtime(15, 30)
-        weekday = datetime.now().weekday()
+        weekday = now_kst().weekday()
         return weekday < 5 and open_t <= now <= close_t
 
     def _notify(self, message: str):
