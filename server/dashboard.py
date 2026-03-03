@@ -180,7 +180,7 @@ tab1, tab2, tab3, tab4 = st.tabs(["📈 자산 추이", "💼 보유 종목", "�
 with tab1:
     if snaps:
         df_snap = pd.DataFrame(snaps)
-        df_snap['timestamp'] = pd.to_datetime(df_snap['timestamp'])
+        df_snap['timestamp'] = pd.to_datetime(df_snap['timestamp'], utc=True, format='ISO8601')
 
         fig = go.Figure()
         fig.add_trace(go.Scatter(

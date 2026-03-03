@@ -7,9 +7,15 @@
 import logging
 import numpy as np
 import pandas as pd
+from datetime import datetime, timezone, timedelta
 from typing import Dict, List, Optional, Tuple
 from dataclasses import dataclass
 from enum import Enum
+
+# KST 헬퍼
+_KST = timezone(timedelta(hours=9))
+def _now_kst_str() -> str:
+    return datetime.now(timezone.utc).astimezone(_KST).strftime("%Y-%m-%d %H:%M:%S")
 
 logger = logging.getLogger(__name__)
 
@@ -146,7 +152,7 @@ class MACrossoverStrategy:
         curr_bb_lower = bb_lower.iloc[-1]
         curr_bb_upper = bb_upper.iloc[-1]
 
-        now_str = pd.Timestamp.now().strftime("%Y-%m-%d %H:%M:%S")
+        now_str = _now_kst_str()
         reasons = []
         buy_score = 0
         sell_score = 0
