@@ -39,22 +39,36 @@ def setup_logging():
         "%(asctime)s [%(levelname)s] %(name)s - %(message)s",
         datefmt="%Y-%m-%d %H:%M:%S"
     )
-    # 파일 핸들러
+    # 파일 핸들러 (UTF-8)
     fh = RotatingFileHandler(
         config.LOG_FILE,
         maxBytes=config.LOG_MAX_BYTES,
-        backupCount=config.LOG_BACKUP_COUNT
+        backupCount=config.LOG_BACKUP_COUNT,
+        encoding='utf-8'
     )
     fh.setFormatter(fmt)
 
-    # 콘솔 핸들러 (UTF-8 강제 설정)
-    import sys, io
-    utf8_stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8', errors='replace')
-    ch = logging.StreamHandler(utf8_stdout)
+    # 콘솔 핸들러 - Python 3.9+ stream encoding 파라미터 사용
+    # (sys.stdout 이중 래핑 방지)
+    ch = logging.StreamHandler(sys.stdout)
     ch.setFormatter(fmt)
+    # 이모지 인코딩 오류 방지: emit 오버라이드
+    original_emit = ch.emit
+    def safe_emit(record):
+        try:
+            original_emit(record)
+        except (UnicodeEncodeError, UnicodeDecodeError):
+            try:
+                record.msg = record.msg.encode('cp949', errors='replace').decode('cp949')
+                original_emit(record)
+            except Exception:
+                pass
+    ch.emit = safe_emit
 
     root_logger = logging.getLogger()
     root_logger.setLevel(getattr(logging, config.LOG_LEVEL))
+    # 기존 핸들러 모두 제거 후 새로 등록 (중복 방지)
+    root_logger.handlers.clear()
     root_logger.addHandler(fh)
     root_logger.addHandler(ch)
 
@@ -120,10 +134,15 @@ class AutoTrader:
 
         try:
             while self.is_running:
-                schedule.run_pending()
+                try:
+                    schedule.run_pending()
+                except Exception as job_err:
+                    logger.error(f"[스케줄 오류] {job_err}", exc_info=True)
                 time.sleep(1)
         except KeyboardInterrupt:
             logger.info("사용자 중단 요청")
+        except Exception as loop_err:
+            logger.error(f"[메인 루프 오류] {loop_err}", exc_info=True)
         finally:
             self.stop()
 
