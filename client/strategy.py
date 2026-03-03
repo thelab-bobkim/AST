@@ -120,7 +120,7 @@ class MACrossoverStrategy:
         ohlcv_data: [{"date": "20240101", "open": ..., "high": ..., "low": ..., "close": ..., "volume": ...}, ...]
         """
         if len(ohlcv_data) < self.long_period + 5:
-            logger.debug(f"{name}({code}): 데이터 부족 ({len(ohlcv_data)}개)")
+            logger.warning(f"[{code}] {name}: OHLCV 데이터 부족 ({len(ohlcv_data)}개, 필요 {self.long_period + 5}개) → 스킵")
             return None
 
         df = pd.DataFrame(ohlcv_data)

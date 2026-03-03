@@ -215,7 +215,16 @@ class AutoTrader:
             return
 
         logger.info("🔍 매매 신호 스캔 시작")
+
+        # 종목별 데이터 상태 로그
+        for code, data in self.stock_data.items():
+            ohlcv_len = len(data.get('ohlcv', []))
+            price = data.get('price', 0)
+            name = data.get('name', code)
+            logger.info(f"  [{code}] {name} | 현재가: {price:,}원 | OHLCV: {ohlcv_len}개")
+
         signals = self.strategy.generate_signals(self.stock_data)
+        logger.info(f"📊 스캔 결과: {len(signals)}개 신호 발견")
 
         for sig in signals:
             if sig.signal in (Signal.BUY, Signal.STRONG_BUY):
