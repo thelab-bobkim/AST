@@ -27,15 +27,22 @@ def _suppress_print():
             sys.stdout = old
 
 def _safe_str(val) -> str:
-    """CP949 인코딩 문자열을 안전하게 UTF-8로 변환"""
+    """pykiwoom에서 latin-1로 잘못 디코딩된 CP949 문자열을 복원"""
     if isinstance(val, bytes):
-        try:
-            return val.decode('cp949')
-        except Exception:
-            return val.decode('utf-8', errors='replace')
+        for enc in ('cp949', 'euc-kr', 'utf-8'):
+            try:
+                return val.decode(enc)
+            except Exception:
+                continue
+        return val.decode('utf-8', errors='replace')
     s = str(val).strip()
+    # pykiwoom이 CP949 bytes를 latin-1로 잘못 디코딩하는 경우 복원
     try:
-        return s.encode('cp949').decode('cp949')
+        return s.encode('latin-1').decode('cp949')
+    except Exception:
+        pass
+    try:
+        return s.encode('utf-8').decode('utf-8')
     except Exception:
         return s
 
