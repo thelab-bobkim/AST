@@ -99,7 +99,7 @@ class KiwoomWrapper:
             self.kiwoom.SetInputValue("비밀번호", "")
             self.kiwoom.SetInputValue("비밀번호입력매체구분", "00")
             self.kiwoom.SetInputValue("조회구분", "2")
-            self.kiwoom.CommRqData("예수금상세현황조회", "opw00001", 0, "0101")
+            self.kiwoom.CommRqData("예수금상세현황조회", "opw00001", 0, "0101", block=True)
 
             balance = {
                 "deposit":           int(self.kiwoom.GetCommData("opw00001", "예수금상세현황조회", 0, "예수금").strip() or 0),
@@ -123,7 +123,7 @@ class KiwoomWrapper:
             self.kiwoom.SetInputValue("비밀번호", "")
             self.kiwoom.SetInputValue("비밀번호입력매체구분", "00")
             self.kiwoom.SetInputValue("조회구분", "1")
-            self.kiwoom.CommRqData("계좌평가잔고내역조회", "opw00018", 0, "0101")
+            self.kiwoom.CommRqData("계좌평가잔고내역조회", "opw00018", 0, "0101", block=True)
 
             holdings = []
             rows = self.kiwoom.GetRepeatCnt("opw00018", "계좌평가잔고내역조회")
@@ -165,7 +165,7 @@ class KiwoomWrapper:
             self.kiwoom.SetInputValue("종목코드", code)
             self.kiwoom.SetInputValue("기준일자", start_date)
             self.kiwoom.SetInputValue("수정주가구분", "1")
-            self.kiwoom.CommRqData("주식일봉차트조회", "opt10081", 0, "0101")
+            self.kiwoom.CommRqData("주식일봉차트조회", "opt10081", 0, "0101", block=True)
 
             ohlcv_list = []
             rows = min(self.kiwoom.GetRepeatCnt("opt10081", "주식일봉차트조회"), count)
@@ -195,7 +195,7 @@ class KiwoomWrapper:
 
         try:
             self.kiwoom.SetInputValue("종목코드", code)
-            self.kiwoom.CommRqData("주식기본정보", "opt10001", 0, "0101")
+            self.kiwoom.CommRqData("주식기본정보", "opt10001", 0, "0101", block=True)
 
             price = abs(int(self.kiwoom.GetCommData("opt10001", "주식기본정보", 0, "현재가").strip() or 0))
             name  = self.kiwoom.GetCommData("opt10001", "주식기본정보", 0, "종목명").strip()
