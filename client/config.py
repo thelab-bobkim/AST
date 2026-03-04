@@ -28,7 +28,7 @@ IS_MOCK_TRADING      = os.getenv("IS_MOCK_TRADING", "True").lower() != "false"
 # 서버 설정 (AWS - 외부 포트 9000)
 # ──────────────────────────────────────────────
 SERVER_HOST        = os.getenv("SERVER_HOST",    "43.203.181.195")
-SERVER_PORT        = int(os.getenv("SERVER_PORT", "9000"))   # 외부 포트: 9000 (Docker: 9000->8000)
+SERVER_PORT        = 9000   # 외부 포트: 9000 (Docker: 9000->8000 내부)
 SERVER_API_URL     = f"http://{SERVER_HOST}:{SERVER_PORT}"
 SERVER_API_KEY     = os.getenv("SERVER_API_KEY", "kiwoom-ast-secret-efdf9d396f5d10b7f4e65834")
 

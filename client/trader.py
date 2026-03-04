@@ -57,12 +57,18 @@ def setup_logging():
     def safe_emit(record):
         try:
             original_emit(record)
-        except (UnicodeEncodeError, UnicodeDecodeError):
+        except (UnicodeEncodeError, UnicodeDecodeError, Exception):
             try:
-                record.msg = record.msg.encode('cp949', errors='replace').decode('cp949')
+                # 이모지 → ? 로 치환
+                if isinstance(record.msg, str):
+                    record.msg = record.msg.encode('cp949', errors='replace').decode('cp949')
+                record.args = ()
+                # Formatter 캐시 제거 (핵심 버그 수정)
+                record.__dict__.pop('message', None)
+                record.__dict__.pop('asctime', None)
                 original_emit(record)
             except Exception:
-                pass
+                pass  # 최종 실패 시 조용히 무시
     ch.emit = safe_emit
 
     root_logger = logging.getLogger()
@@ -187,7 +193,7 @@ class AutoTrader:
 
     def _market_open(self):
         """장 시작 (09:00)"""
-        logger.info("🔔 장 시작")
+        logger.info("[09:00] 장 시작")
         self._scan_signals()
 
     def _monitor_positions(self):
