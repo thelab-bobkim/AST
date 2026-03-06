@@ -35,11 +35,11 @@ SERVER_API_KEY     = os.getenv("SERVER_API_KEY", "kiwoom-ast-secret-efdf9d396f5d
 # ──────────────────────────────────────────────
 # 투자 자본 설정 (100만원)
 # ──────────────────────────────────────────────
-INITIAL_CAPITAL    = 1_000_000   # 초기 자본 (원)
-MAX_POSITION_RATIO = 0.40        # 종목당 최대 비중 40% (100만원 기준 40만원/종목)
+INITIAL_CAPITAL    = 1_100_000   # 초기 자본 (원) - 110만원
+MAX_POSITION_RATIO = 0.40        # 종목당 최대 비중 40% (110만원 기준 44만원/종목)
 MAX_POSITION_COUNT = 3           # 최대 보유 종목 수 (40% x 3 = 최대 120%)
-STOP_LOSS_RATIO    = 0.01        # 손절 비율 1%
-TAKE_PROFIT_RATIO  = 0.03        # 익절 비율 3%
+STOP_LOSS_RATIO    = 0.02        # 손절 비율 2%
+TAKE_PROFIT_RATIO  = 0.04        # 익절 비율 4%
 
 # ──────────────────────────────────────────────
 # 전략 설정 (이동평균 크로스오버)
