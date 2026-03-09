@@ -98,6 +98,15 @@ class KiwoomWrapper:
                     self.account_number = accounts.split(';')[0]
                 logger.info(f"✅ 키움 로그인 성공 | 계좌: {self.account_number}")
 
+                # [2141] 계좌 주문 비밀번호 자동 등록
+                # KOA_Functions으로 계좌비밀번호 저장 (주문 시 팝업 방지)
+                try:
+                    acnt_pwd = config.ACCOUNT_PASSWORD
+                    self.kiwoom.KOA_Functions("SetAcntPwd", acnt_pwd)
+                    logger.info("🔑 계좌 주문 비밀번호 등록 완료")
+                except Exception as pw_err:
+                    logger.warning(f"계좌 비밀번호 자동 등록 실패 (수동 입력 필요): {pw_err}")
+
                 # 실전/모의 서버 확인 (GetServerGubun: "1"=모의, 그외=실전)
                 server = self.kiwoom.GetLoginInfo("GetServerGubun")
                 server_name = "모의투자" if server == "1" else "실전투자"
@@ -295,6 +304,12 @@ class KiwoomWrapper:
                 hoga_code,               # 거래구분
                 ""                       # 원주문번호
             )
+            # [2141] 계좌비밀번호 등록 처리
+            # KOA_Functions로 계좌비밀번호 입력창 자동 처리
+            try:
+                self.kiwoom.KOA_Functions("ShowAccountWindow", "")
+            except Exception:
+                pass
 
             if result == 0:
                 logger.info(f"✅ 주문 성공 | {order_type.upper()} {code} {quantity}주 {order_method}")
