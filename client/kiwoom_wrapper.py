@@ -99,13 +99,18 @@ class KiwoomWrapper:
                 logger.info(f"✅ 키움 로그인 성공 | 계좌: {self.account_number}")
 
                 # [2141] 계좌 주문 비밀번호 자동 등록
-                # KOA_Functions으로 계좌비밀번호 저장 (주문 시 팝업 방지)
                 try:
                     acnt_pwd = config.ACCOUNT_PASSWORD
+                    # 방법1: SetAcntPwd로 프로그램적 저장
                     self.kiwoom.KOA_Functions("SetAcntPwd", acnt_pwd)
                     logger.info("🔑 계좌 주문 비밀번호 등록 완료")
-                except Exception as pw_err:
-                    logger.warning(f"계좌 비밀번호 자동 등록 실패 (수동 입력 필요): {pw_err}")
+                except Exception:
+                    try:
+                        # 방법2: ShowAccountWindow로 입력창 직접 표시
+                        self.kiwoom.KOA_Functions("ShowAccountWindow", "")
+                        logger.info("🔑 계좌비밀번호 입력창 표시 - 비밀번호 입력 후 등록 클릭해주세요")
+                    except Exception as pw_err:
+                        logger.warning(f"계좌 비밀번호 등록 실패: {pw_err}")
 
                 # 실전/모의 서버 확인 (GetServerGubun: "1"=모의, 그외=실전)
                 server = self.kiwoom.GetLoginInfo("GetServerGubun")
